@@ -65,12 +65,13 @@ namespace BulkDownloader.Service
                 }
             }
 
-            return true;
+            return File.Exists(FilenameWithPath);
         }
 
 
         private static async Task<HttpResponseMessage> InternalGetResponse(Uri uri)
         {
+            _httpClient.DefaultRequestHeaders.Referrer = new Uri(uri.Host);
             return await _httpClient.GetAsync(uri);
         }
     }

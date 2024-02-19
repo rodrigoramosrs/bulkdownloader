@@ -10,15 +10,14 @@ namespace BulkDownloader.Utils
     {
         internal static bool CreateFolderIfNotExists(string Filename)
         {
-            if (string.IsNullOrEmpty(Filename))
-            {
-                return false;
-            }
-            if (!Directory.Exists(Path.GetDirectoryName(Filename)))
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(Filename));
-            }
-            return true;
+            if (string.IsNullOrEmpty(Filename)) return false;
+
+            string CurrentDirPath = Path.GetDirectoryName(Filename) ?? "";
+
+            if (!Directory.Exists(CurrentDirPath))
+                Directory.CreateDirectory(CurrentDirPath);
+
+            return Directory.Exists(CurrentDirPath);
         }
 
         internal static string ConvertUriToLocalPath(Uri uri, string RootPath)
