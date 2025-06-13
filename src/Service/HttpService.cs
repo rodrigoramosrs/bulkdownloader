@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Pipes;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
-using System.IO;
-using System.Net;
-using System.Net.Http.Headers;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace BulkDownloader.Service
 {
@@ -47,32 +49,56 @@ namespace BulkDownloader.Service
         }
 
 
-        internal static async Task<Stream> GetAsStream(Uri uri)
+        internal static async Task<Stream> GetAsStream(string url, CancellationToken cancellationToken)
         {
-            var response = await InternalGetResponse(uri);
+            var response = await InternalGetResponse(url, cancellationToken);
             return response.Content.ReadAsStream();
         }
 
-        internal static async Task<bool> GetAndSaveAsFile(Uri uri, string FilenameWithPath)
+        internal static async Task<(bool Success, long FileSize)> GetAndSaveAsFile(string url, string FilenameWithPath, CancellationToken cancellationToken)
         {
-            using (var stream = await GetAsStream(uri))
+            string finalFilePath = FilenameWithPath;
+            if (!Path.HasExtension(finalFilePath))
+                finalFilePath += ".";
+            try
             {
+                using (var stream = await GetAsStream(url, cancellationToken))
                 {
-                    using (var fileStream = new FileStream(FilenameWithPath, FileMode.Create, FileAccess.Write))
-                    {
-                        await stream.CopyToAsync(fileStream);
-                    }
+                    
+
+                   
+
+                    const int buffer = 64 * 1024; // 64 KB
+                    await using var fs = new FileStream(
+                        finalFilePath,
+                        FileMode.Create,
+                        FileAccess.Write,
+                        FileShare.None,
+                        bufferSize: buffer,
+                        options: FileOptions.Asynchronous | FileOptions.SequentialScan);
+
+                    await stream.CopyToAsync(fs, buffer, cancellationToken).ConfigureAwait(false);
+                    return (true, fs.Length);
+
+                    //using (var fileStream = new FileStream(FilenameWithPath, FileMode.Create, FileAccess.Write))
+                    //{
+                    //    await stream.CopyToAsync(fileStream, cancellationToken);
+                    //    return (true, fileStream.Length); // Retorna sucesso e tamanho do arquivo
+
+                    //}
                 }
             }
-
-            return File.Exists(FilenameWithPath);
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao salvar arquivo: {ex.Message}");
+                return (false, 0); // Em caso de erro, retorna falso e tamanho zero
+            }
         }
 
-
-        private static async Task<HttpResponseMessage> InternalGetResponse(Uri uri)
+        private static async Task<HttpResponseMessage> InternalGetResponse(string url, CancellationToken cancellationToken)
         {
-            _httpClient.DefaultRequestHeaders.Referrer = new Uri(uri.Host);
-            return await _httpClient.GetAsync(uri);
+            _httpClient.DefaultRequestHeaders.Referrer = new (url);// new Uri(uri.Host);
+            return await _httpClient.GetAsync(url, cancellationToken);
         }
     }
 }

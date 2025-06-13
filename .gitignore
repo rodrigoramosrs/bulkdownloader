@@ -453,3 +453,4 @@ $RECYCLE.BIN/
 !.vscode/launch.json
 !.vscode/extensions.json
 src/BountyMan/Properties/launchSettings.json
+src/Properties/launchSettings.json

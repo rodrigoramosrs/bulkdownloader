@@ -41,7 +41,7 @@ namespace BulkDownloader
                 }
 
                 Console.WriteLine("[i] Downloading content from file: " + file);
-                await Service.BulkDownloadService.BulkDownload(file);
+                await Service.BulkDownloadService.BulkDownloadAsync(file);
             }
             Console.WriteLine("Done...");
 

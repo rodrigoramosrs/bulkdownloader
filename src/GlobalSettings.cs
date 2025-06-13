@@ -16,6 +16,6 @@ namespace BulkDownloader
 
         internal static string RootPath = AppContext.BaseDirectory;
         internal static string OutputPath = Path.Combine(RootPath, "output");
-        internal static readonly int MaxDegreeOfParallelism = 35;
+        internal static readonly int MaxDegreeOfParallelism = 5;
     }
 }
