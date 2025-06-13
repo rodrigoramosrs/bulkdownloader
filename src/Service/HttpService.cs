@@ -59,7 +59,7 @@ namespace BulkDownloader.Service
         {
             string finalFilePath = FilenameWithPath;
             if (!Path.HasExtension(finalFilePath))
-                finalFilePath += ".";
+                finalFilePath += ".no_ext";
             try
             {
                 using (var stream = await GetAsStream(url, cancellationToken))
